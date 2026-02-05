@@ -1,0 +1,113 @@
+services:
+  orthanc:
+    image: orthancteam/orthanc:latest
+    restart: unless-stopped
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+    volumes:
+      - orthanc-storage:/var/lib/orthanc/db
+      - ./Scripts/event-handler.lua:/etc/orthanc/event-handler.lua:ro
+    environment:
+      VERBOSE_STARTUP: "true"
+      VERBOSE_ENABLED: "true"
+
+      # Core plugins
+      DICOM_WEB_PLUGIN_ENABLED: "true"
+      OHIF_PLUGIN_ENABLED: "true"
+      STONE_WEB_VIEWER_PLUGIN_ENABLED: "true"
+      WORKLISTS_PLUGIN_ENABLED: "true"
+
+      # Lua event handler
+      ORTHANC__LUA_SCRIPTS: '["/etc/orthanc/event-handler.lua"]'
+
+      # Persist DICOM modalities in the database
+      ORTHANC__DICOM_MODALITIES_IN_DATABASE: "true"
+
+      # PostgreSQL index
+      ORTHANC__POSTGRESQL: |
+        {
+          "EnableIndex": true,
+          "EnableStorage": true,
+          "Host": "${ORTHANC_DB_HOST}",
+          "Port": ${ORTHANC_DB_PORT},
+          "Database": "${ORTHANC_DB_NAME}",
+          "Username": "${ORTHANC_DB_USER}",
+          "Password": "${ORTHANC_DB_PASSWORD}",
+          "Lock": true,
+          "EnableVerboseLogs": true
+        }
+
+      # Make DICOMweb endpoints discoverable
+      ORTHANC__DICOM_WEB__PUBLIC_ROOT: "/dicom-web/"
+
+      # Enable OHIF viewer entry in Orthanc Explorer 2
+      ORTHANC__ORTHANC_EXPLORER_2__UI_OPTIONS__ENABLE_OPEN_IN_OHIF_VIEWER_3: "true"
+      ORTHANC__ORTHANC_EXPLORER_2__UI_OPTIONS__OHIF_VIEWER_3_PUBLIC_ROOT: "http://localhost:8042/ohif/"
+
+      # Orthanc JSON configuration
+      ORTHANC_JSON: |
+        {
+          "Name": "Orthanc with Postgres, Worklists, OE2, OHIF",
+          "AuthenticationEnabled": false,
+          "DicomAet": "ORTHANC",
+          "StableAge": 10,
+          "DatabaseServerIdentifier": "orthanc-main",
+          "DicomModalitiesInDatabase": true,
+          "OrthancExplorer2": {
+            "UiOptions": {
+              "NewWorklistDefaultTags": {
+                "PatientID": {
+                  "Required": true
+                },
+                "PatientName": {
+                  "Required": true,
+                  "PatientNameType": "Computed",
+                  "ComputedFrom": ["lastName", "firstName"]
+                },
+                "PatientSex": {
+                  "Choices": ["F", "M", "U", "O"]
+                },
+                "StudyInstanceUID": {
+                  "DefaultValue": "$$GENERATE_DICOM_UUID$$",
+                  "Editable": false
+                },
+                "ScheduledProcedureStepSequence": {
+                  "DefaultValue": [
+                    {
+                      "ScheduledProcedureStepStartDate": {
+                        "DefaultValue": "$$TODAY$$",
+                        "Required": true
+                      },
+                      "Modality": {
+                        "Choices": ["DX", "US"],
+                        "DefaultValue": "DX",
+                        "Required": true
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "Worklists": {
+            "Enable": true,
+            "FilterIssuerAet": false,
+            "LimitAnswers": 0,
+            "SaveInOrthancDatabase": true,
+            "SetStudyInstanceUidIfMissing": true,
+            "DeleteWorklistsOnStableStudy": true,
+            "HousekeepingInterval": 60,
+            "DeleteWorklistsDelay": 24
+          },
+          "RIS": {
+            "Host": "http://ris.test"
+          },
+          "OHIF": {
+            "RouterBasename": "/ohif/",
+            "DataSource": "dicom-web"
+          }
+        }
+
+volumes:
+  orthanc-storage:
