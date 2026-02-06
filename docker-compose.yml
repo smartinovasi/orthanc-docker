@@ -8,6 +8,7 @@ services:
     volumes:
       - orthanc-storage:/var/lib/orthanc/db
       - ./Scripts/event-handler.lua:/etc/orthanc/event-handler.lua:ro
+      - ./Scripts/ohif-user-config.js:/etc/orthanc/ohif-user-config.js:ro
     environment:
       VERBOSE_STARTUP: "true"
       VERBOSE_ENABLED: "true"
@@ -48,7 +49,7 @@ services:
       # Orthanc JSON configuration
       ORTHANC_JSON: |
         {
-          "Name": "Orthanc with Postgres, Worklists, OE2, OHIF",
+          "Name": "Orthanc",
           "AuthenticationEnabled": false,
           "DicomAet": "ORTHANC",
           "StableAge": 10,
@@ -101,11 +102,16 @@ services:
             "DeleteWorklistsDelay": 24
           },
           "RIS": {
-            "Host": "http://ris.test"
+            "Host": "${ORTHANC_RIS_HOST}"
           },
           "OHIF": {
             "RouterBasename": "/ohif/",
-            "DataSource": "dicom-web"
+            "DataSource": "dicom-web",
+            "UserConfiguration": "/etc/orthanc/ohif-user-config.js"
+          },
+          "StoneWebViewer": {
+            "ShowInfoPanelAtStartup": "Never",
+            "ShowUserPreferencesButton": false
           }
         }
 
