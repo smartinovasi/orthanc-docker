@@ -42,7 +42,7 @@ docker compose up -d
 ## File Penting
 - Docker Compose: [docker-compose.yml](docker-compose.yml)
 - Lua handler: [Scripts/event-handler.lua](Scripts/event-handler.lua)
-- OHIF user config: [Scripts/ohif-user-config.js](Scripts/ohif-user-config.js)
+- OHIF user config: [Scripts/ohif.js](Scripts/ohif.js)
 
 ## Catatan
 - Plugin OHIF Orthanc akan meng-override beberapa pengaturan OHIF (data source, router basename).
