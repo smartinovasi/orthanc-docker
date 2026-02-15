@@ -114,6 +114,8 @@ services:
             "ShowUserPreferencesButton": false
           }
         }
+    extra_hosts:
+      - "${ORTHANC_RIS_DOMAIN}:host-gateway"
 
 volumes:
   orthanc-storage:
